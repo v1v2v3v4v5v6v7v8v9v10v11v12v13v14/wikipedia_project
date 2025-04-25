@@ -1,34 +1,55 @@
-# From: Top Level / Script Execution
-# Current Location: src/wikipedia_documents/wikipedia_document.py
-# Target Location: scripts/run_wiki_processing.py (or similar entry point script)
+#!/usr/bin/env python3
+import argparse
+import logging
+from pathlib import Path
 
-if __name__ == "__main__":
-    # --- Analysis ---
-    # Purpose: Entry point when script is run directly. Parses command line arguments. Calls main().
-    # Logic: Uses argparse for simple file location argument.
-    # Dependencies: argparse, main().
-    # --- Refactoring Notes ---
-    # - Keep this general structure for the main entry point script.
-    # - Instead of calling the local `main` function, this script should:
-    #     1. Handle configuration (e.g., read env vars, config files for DB URI, etc.).
-    #     2. Instantiate necessary components (e.g., MongoPersistenceService).
-    #     3. Instantiate the Orchestrator, injecting its dependencies.
-    #     4. Call the main execution method on the Orchestrator instance (e.g., `orchestrator.run_job(args.file_location)`).
-    # --- Target Framework ---
-    # - Move this block to the main entry point script (e.g., scripts/run_wiki_processing.py).
-    # - Modify it to instantiate and run the Orchestrator class.
+from processing.orchestrator import WikipediaDataOrchestrator
+from processing.parser import WikipediaStreamParser
+from persistence.mongo_service import MongoPersistenceService
+from wiki_utils.compression import decompress_file
+from logging_utils import ApplicationLogger
 
-    parser = argparse.ArgumentParser(description="Process a Wikipedia dump file.")
-    parser.add_argument('-f', '--file_location', type=str, required=True, help='The location of the Wikipedia dump file.') # Added required=True
+
+def main():
+    # Parse arguments
+    parser = argparse.ArgumentParser(description='Process Wikipedia dump files')
+    parser.add_argument('input_path', type=str, help='Path to input file or directory')
+    parser.add_argument('--output-dir', type=str, default='./data', help='Output directory')
+    parser.add_argument('--mongo-uri', type=str, default='mongodb://localhost:27017', 
+                       help='MongoDB connection URI')
+    parser.add_argument('--batch-size', type=int, default=100, help='Processing batch size')
     args = parser.parse_args()
 
-    # --- Replace main(args.file_location) with Orchestrator setup/run ---
-    # Example:
-    # config = load_config() # Load DB URIs etc.
-    # persistence_service = MongoPersistenceService(uri=config.mongo_uri, db_name=config.db_name)
-    # orchestrator = Orchestrator(persistence=persistence_service)
-    # orchestrator.run_job(args.file_location)
-    # --- End Example ---
+    # Initialize
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    logger = ApplicationLogger()
+    parser = WikipediaStreamParser()
+    persistence = MongoPersistenceService(args.mongo_uri, logger=logger)
+    
+    orchestrator = WikipediaDataOrchestrator(
+        stream_parser=parser,
+        persistence_service=persistence,
+        logger=logger,
+        batch_size=args.batch_size,
+        output_dir=output_dir
+    )
 
-    # Process and store
-    main(args.file_location) # <<< REPLACE THIS CALL
+    # Process input
+    input_path = Path(args.input_path)
+    if input_path.is_file():
+        if input_path.suffix in ('.gz', '.bz2'):
+            input_path = decompress_file(input_path, output_dir, delete_original=False)
+        orchestrator.process_dump_file(input_path)
+    elif input_path.is_dir():
+        for file in input_path.glob('*'):
+            if file.suffix in ('.gz', '.bz2'):
+                file = decompress_file(file, output_dir, delete_original=False)
+            orchestrator.process_dump_file(file)
+    else:
+        logger.error(f"Invalid input path: {input_path}")
+        return
+
+if __name__ == "__main__":
+    main()

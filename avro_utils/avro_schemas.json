@@ -1,0 +1,67 @@
+[
+  {
+    "type": "record",
+    "name": "PageView",
+    "fields": [
+      {"name": "page_id", "type": "string", "doc": "Unique page identifier (ensure string matches source)"},
+      { "name": "wiki_code", "type": "string", "doc": "Wiki project code (e.g., enwiki)" },
+      { "name": "views", "type": "int", "doc": "Number of views" },
+      { "name": "timestamp", "type": { "type": "long", "logicalType": "timestamp-millis" }, "doc": "Timestamp of the view event" }
+    ]
+  },
+  {
+    "type": "record",
+    "name": "ClickStream",
+    "fields": [
+      {"name": "source_page", "type": "string", "doc": "Source page ID (ensure string matches source)"},
+      {"name": "target_page", "type": "string", "doc": "Target page ID (ensure string matches source)"},
+      {"name": "wiki_code", "type": "string", "doc": "Wiki project code (e.g., enwiki)"},
+      {"name": "clicks", "type": "int", "doc": "Number of clicks"},
+      {"name": "timestamp", "type": {"type": "long", "logicalType": "timestamp-millis"}, "doc": "Timestamp of the click event"}
+    ]
+  },
+  {
+    "type": "record",
+    "name": "PageLinks",
+    "fields": [
+      {"name": "source_page_id", "type": "string", "doc": "Source page ID (ensure string matches source)"},
+      {"name": "target_page_id", "type": "string", "doc": "Target page ID (ensure string matches source)"},
+      {"name": "wiki_code", "type": "string", "doc": "Wiki project code (e.g., enwiki)"},
+      {"name": "timestamp", "type": {"type": "long", "logicalType": "timestamp-millis"}, "doc": "Timestamp associated with the link context"}
+    ]
+  },
+  {
+    "type": "record",
+    "name": "RevisionData",
+    "fields": [
+      {"name": "page_id", "type": "string", "doc": "Page ID (ensure string matches source)"},
+      {"name": "title", "type": "string"},
+      {"name": "rev_id", "type": "string", "doc": "Revision ID (ensure string matches source)"},
+      {"name": "timestamp", "type": {"type": "long", "logicalType": "timestamp-millis"}, "default": 0, "doc": "Timestamp of the revision"},
+      {"name": "contributor_id", "type": "string", "default": "string"},
+      {"name": "comment", "type": ["null", "string"], "default": null},
+      {"name": "text", "type": ["null", "string"], "default": null, "doc": "Full revision text (can be large)"},
+      {"name": "is_redirect", "type": ["null", "boolean"], "default": null},
+      {"name": "namespace", "type": ["null", "int"], "default": null},
+      {
+        "name": "hash_id",
+        "type": "string",
+        "doc": "Hash identifier linking this revision to its parent document"
+      }
+    ]
+  },
+  {
+    "type": "record",
+    "name": "WikiDocument",
+    "fields": [
+      {"name": "page_id", "type": "string", "doc": "Document identifier"},
+      {"name": "wiki_code", "type": "string"},
+      {"name": "title", "type": "string"},
+      {"name": "timestamp", "type": {"type": "long", "logicalType": "timestamp-millis"}, "doc": "Timestamp of document creation or main relevance"},
+      {"name": "is_redirect", "type": ["null", "boolean"], "default": null},
+      {"name": "namespace", "type": "int"},
+      {"name": "hash_id", "type": "string", "doc": "A hash identifier for the document content/state"},
+      {"name": "last_updated", "type": ["null", {"type": "long", "logicalType": "timestamp-millis"}], "default": null, "doc": "Timestamp when this document record was last updated"}
+    ]
+  }
+]
