@@ -7,7 +7,7 @@ from processing.orchestrator import WikipediaDataOrchestrator
 from processing.parser import WikipediaStreamParser
 from persistence.mongo_service import MongoPersistenceService
 from wiki_utils.compression import decompress_file
-from logging_utils import ApplicationLogger
+from wiki_utils.logging_utils import ApplicationLogger
 
 
 def main():

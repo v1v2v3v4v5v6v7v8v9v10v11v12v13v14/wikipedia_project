@@ -17,9 +17,8 @@ processing/parser/xml_parser.py
 processing/shared/constants.py
 processing/shared/error_handling.py
 scripts/__init__.py
-scripts/check_dump_availability.py
+scripts/file_getter.py
 scripts/run_wiki_processing.py
-scripts/wikimedia_checker.py
 tests/__init__.py
 tests/fixtures/__init__.py
 tests/integration/__init__.py
@@ -35,8 +34,10 @@ wiki_io/file_discoverer.py
 wiki_io/path_utils.py
 wiki_io/stream_initializer.py
 wiki_utils/__init__.py
+wiki_utils/check_dump_availability.py
 wiki_utils/datetime_utils.py
 wiki_utils/hashing.py
+wiki_utils/wiki_downloader.py
 wikipedia_project.egg-info/PKG-INFO
 wikipedia_project.egg-info/SOURCES.txt
 wikipedia_project.egg-info/dependency_links.txt

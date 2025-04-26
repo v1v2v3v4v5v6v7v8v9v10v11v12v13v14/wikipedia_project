@@ -5,9 +5,9 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from wiki_utils.compression import decompress_file
+#from wiki_utils.compression import decompress_file
 import requests
-from logging_utils import ApplicationLogger
+from wiki_utils.logging_utils import ApplicationLogger
 from config.settings import OUTPUT_DIRECTORY_PATH
 import processing.parser.maria_parser
 from tqdm import tqdm

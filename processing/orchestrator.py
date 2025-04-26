@@ -29,6 +29,7 @@ class WikipediaDataOrchestrator:
         self.persistence = components['persistence']
         self.logger = components.get('logger', logging.getLogger(__name__))
         self.error_handler = components.get('error_handler')
+        self.fetcher = components['fetcher']
         
         self.batch_size = config.get('batch_size', 100)
         self.output_dir = Path(config.get('output_dir', './data'))
@@ -38,6 +39,8 @@ class WikipediaDataOrchestrator:
 
     def _validate_components(self):
         """Validate required components and interfaces"""
+        if not hasattr(self.fetcher, 'fetch_all'):
+            raise ValueError("Fetcher must implement fetch_all()")
         if not hasattr(self.parser, 'parse_stream'):
             raise ValueError("Parser must implement parse_stream()")
         if not hasattr(self.persistence, 'bulk_save_documents'):
@@ -123,3 +126,54 @@ class WikipediaDataOrchestrator:
             f"• Duration: {stats.duration():.2f}s\n"
             f"• Throughput: {stats.documents_processed/stats.duration():.1f} docs/sec"
         )
+
+    def run(self):
+        """End-to-end orchestrator: fetch files then process."""
+        files = self.fetcher.fetch_all()
+        for file_path in files:
+            self.process_dump_file(file_path)
+
+if __name__ == "__main__":
+    import logging
+    from pathlib import Path
+
+    # Concrete component implementations
+    from wiki_utils.file_getter import FileGetter           # must implement fetch_all()
+    from wiki_utils.parser import WikipediaParser           # must implement parse_stream()
+    from wiki_utils.persistence import MongoPersistence     # must implement bulk_save_documents()
+    from wiki_utils.error_handler import ErrorHandler       # must implement handle()
+
+    # Instantiate each component with hard-coded args for now
+    fetcher = FileGetter(
+        base_dirs={
+            'pageviews': 'https://dumps.wikimedia.org/other/pageview_complete/',
+            'clickstream': 'https://dumps.wikimedia.org/other/clickstream/'
+        },
+        years=[2023], months=[1],
+        wiki_codes=['enwiki']
+    )
+    parser = WikipediaParser(schema_path="schemas/pageview.avsc", filters=None)
+    persistence = MongoPersistence(
+        uri="mongodb://localhost:27017",
+        db_name="wikimedia",
+        collection_name="pageviews"
+    )
+    error_handler = ErrorHandler(reporting_endpoint="https://errors.myapp.com")
+
+    # Bundle components and config
+    components = {
+        'fetcher':       fetcher,
+        'parser':        parser,
+        'persistence':   persistence,
+        'logger':        logging.getLogger("wikiorch"),
+        'error_handler': error_handler
+    }
+    config = {
+        'batch_size':   500,
+        'output_dir':   "./data",
+        'max_workers':  4
+    }
+
+    # Create and run orchestrator
+    orchestrator = WikipediaDataOrchestrator(components, config)
+    orchestrator.run()
