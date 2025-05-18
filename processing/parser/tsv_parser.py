@@ -23,6 +23,15 @@ from processing.shared.constants import (
     USER_TYPES,
     NUMERIC_DEFAULTS
 )
+
+# Mapping of domain substrings to referer categories
+DOMAIN_MAP = {
+    "google.": "other-google",
+    "yahoo.": "other-yahoo",
+    "bing.": "other-bing",
+    "facebook.": "other-facebook",
+    "twitter.": "other-twitter",
+}
 class TSVParser(BaseParser):
     PageviewRecord = namedtuple('PageviewRecord', ['access_type', 'user_type', 'date', 'views'])
     """Parser for TSV format Wikipedia data files."""
@@ -183,18 +192,11 @@ class TSVParser(BaseParser):
                 referer_category = "article"
             elif nav_type == "external":
                 domain = parsed_url.netloc.lower()
-                if "google." in domain:
-                    referer_category = "other-google"
-                elif "yahoo." in domain:
-                    referer_category = "other-yahoo"
-                elif "bing." in domain:
-                    referer_category = "other-bing"
-                elif "facebook." in domain:
-                    referer_category = "other-facebook"
-                elif "twitter." in domain:
-                    referer_category = "other-twitter"
-                else:
-                    referer_category = "other-other"
+                referer_category = "other-other"
+                for key, value in DOMAIN_MAP.items():
+                    if key in domain:
+                        referer_category = value
+                        break
             else:
                 referer_category = "other-empty"
 
