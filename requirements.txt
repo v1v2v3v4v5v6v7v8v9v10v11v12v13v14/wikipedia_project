@@ -7,3 +7,5 @@ pytest==8.3.5
 Requests==2.32.3
 setuptools==65.5.0
 tqdm==4.66.1
+pyflink==1.17.0
+cassandra-driver==3.29.1

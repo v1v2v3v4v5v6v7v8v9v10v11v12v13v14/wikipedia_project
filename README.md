@@ -18,3 +18,11 @@ defaults relative to the project root are used.
 
 Set these variables in your environment or a `.env` file before running the
 scripts if you need different locations.
+
+## Flink Example: Combining Topics
+
+The `processing/flink_processing/kafka_topic_union.py` script shows how to
+consume multiple Kafka topics in a single Flink job. The streams are merged with
+`union` so that a single check against Cassandra can be performed for each
+unified event. Adjust the topic names, Kafka properties and Cassandra query to
+match your environment.
