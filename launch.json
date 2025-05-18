@@ -1,0 +1,9 @@
+{
+    "name": "Python: Parser Test",
+    "type": "python",
+    "request": "launch",
+    "program": "${workspaceFolder}/tests/parser_test.py",
+    "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+    }
+}
