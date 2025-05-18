@@ -53,6 +53,12 @@ OUTPUT_DIRECTORY_PATH = os.environ.get(
 KAFKA_BROKERS = 'localhost:9092'
 KAFKA_TOPIC = 'test'
 
+# Location of the Flink job used by Airflow's backfill pipeline
+# Default points to the example union script in this repository
+FLINK_JOB_PATH = os.environ.get(
+    'FLINK_JOB_PATH', str(ROOT_DIR / 'processing' / 'flink_processing' / 'kafka_topic_union.py')
+)
+
 # Kafka partition key mapping
 PARTITION_KEY_MAPPING = {
 "PageView": ["page_hash", "year_month"],
