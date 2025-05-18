@@ -2,7 +2,7 @@ from airflow.decorators import dag, task
 from datetime import datetime, timedelta, timezone
 import logging
 from processing.producer.kafka_python import ParserKafkaInterface
-from config.settings import KAFKA_BROKERS, KAFKA_TOPIC
+from config.settings import KAFKA_BROKERS, KAFKA_TOPIC, FLINK_JOB_PATH
 from tests.parser_test import ParserTestConfig
 from pathlib import Path
 from processing.parser.maria_parser import PageInfoParser
@@ -60,9 +60,8 @@ def process_test_configs_dag():
 
     @task
     def trigger_flink_job():
-        flink_script_path = '/Applications/wikipedia_project/processing/flink_processing/kafka_topic_union.py'
         command = [
-            'python', flink_script_path
+            'python', str(FLINK_JOB_PATH)
         ]
         try:
             subprocess.run(command, check=True)
@@ -78,5 +77,5 @@ def process_test_configs_dag():
     # Airflow task dependency (parse/send records -> trigger flink)
     parsed_records >> flink_task
 
-# Proper DAG instantiation
-dag_instance = process_test_configs_dag()
+# Proper DAG instantiation for Airflow
+dag = process_test_configs_dag()
