@@ -134,46 +134,9 @@ class WikipediaDataOrchestrator:
             self.process_dump_file(file_path)
 
 if __name__ == "__main__":
-    import logging
-    from pathlib import Path
-
-    # Concrete component implementations
-    from wiki_utils.file_getter import FileGetter           # must implement fetch_all()
-    from wiki_utils.parser import WikipediaParser           # must implement parse_stream()
-    from wiki_utils.persistence import MongoPersistence     # must implement bulk_save_documents()
-    from wiki_utils.error_handler import ErrorHandler       # must implement handle()
-
-    # Instantiate each component with hard-coded args for now
-    fetcher = FileGetter(
-        base_dirs={
-            'pageviews': 'https://dumps.wikimedia.org/other/pageview_complete/',
-            'clickstream': 'https://dumps.wikimedia.org/other/clickstream/'
-        },
-        years=[2023], months=[1],
-        wiki_codes=['enwiki']
-    )
-    parser = WikipediaParser(schema_path="schemas/pageview.avsc", filters=None)
-    persistence = MongoPersistence(
-        uri="mongodb://localhost:27017",
-        db_name="wikimedia",
-        collection_name="pageviews"
-    )
-    error_handler = ErrorHandler(reporting_endpoint="https://errors.myapp.com")
-
-    # Bundle components and config
-    components = {
-        'fetcher':       fetcher,
-        'parser':        parser,
-        'persistence':   persistence,
-        'logger':        logging.getLogger("wikiorch"),
-        'error_handler': error_handler
-    }
-    config = {
-        'batch_size':   500,
-        'output_dir':   "./data",
-        'max_workers':  4
-    }
-
-    # Create and run orchestrator
-    orchestrator = WikipediaDataOrchestrator(components, config)
-    orchestrator.run()
+    # Example usage would instantiate concrete implementations for the
+    # required components (fetcher, parser, persistence, and optional
+    # error handler) and then run the orchestrator.  Implementations of
+    # these components are intentionally omitted from this repository,
+    # so running this module directly will do nothing.
+    pass
