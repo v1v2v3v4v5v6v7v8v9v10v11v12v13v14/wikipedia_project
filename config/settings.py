@@ -19,10 +19,25 @@ PARSER_CONFIG = {
 # Downloader configuration, paths should align with Docker volumes for persistent storage
 # Make sure the download_dir matches the path of the mounted volume in the Docker container
 DOWNLOAD_CONFIG = {
-    'download_dir': '/Users/danielkarwoski/Downloads/wikipedia_refactor_target/data/downloads',
+    'download_dir': '/Users/danielkarwoski/Downloads/wikipedia_project/data/downloads',
     'max_retries': 3,
     'retry_delay': 2,
 }
-AVRO_SCHEMA_PATH = '/Users/danielkarwoski/Downloads/wikipedia_refactor_target/avro_utils/avro_schemas.json'
-PERSISTENCE_LOGFILE_PATH = '/Users/danielkarwoski/Downloads/wikipedia_refactor_target/persistence/mongodb_log.py'
-OUTPUT_DIRECTORY_PATH = '/Users/danielkarwoski/Downloads/wikipedia_refactor_target/output/'
+AVRO_SCHEMA_PATH = '/Applications/wikipedia_project/avro_utils/avro_schemas.json'
+PERSISTENCE_LOGFILE_PATH = '/Users/danielkarwoski/Downloads/wikipedia_project/persistence/mongodb_log.py'
+OUTPUT_DIRECTORY_PATH = '/Users/danielkarwoski/Downloads/wikipedia_project/output/'
+
+# Kafka Configuration
+KAFKA_BROKERS = 'localhost:9092'
+KAFKA_TOPIC = 'test'
+
+# Kafka partition key mapping
+PARTITION_KEY_MAPPING = {
+"PageView": ["page_hash", "year_month"],
+"ClickStream": ["page_hash", "year_month"],
+"OutboundPageLinks": ["year_month", "tuple_struct.pl_from"],
+"InboundPageLinks": ["year_month", "tuple_struct.pl_target_id"],
+"RevisionData": ["page_hash", "year_month"],
+"WikiDocument": ["page_hash", "wiki_code", "year_month"],
+"TitleIdMapping": ["page_hash", "year_month"]
+}

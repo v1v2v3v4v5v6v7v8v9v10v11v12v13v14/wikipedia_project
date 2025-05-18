@@ -3,21 +3,21 @@
     "type": "record",
     "name": "PageView",
     "fields": [
+      { "name": "page_hash", "type": "string", "doc": "Unique page identifier" },
+      { "name": "year_month", "type": "string", "doc": "Bucket key in YYYY-MM format" },
       {
-        "name": "page_id",
-        "type": "string",
-        "doc": "Unique page identifier (ensure string matches source)"
-      },
-      {
-        "name": "wiki_code",
-        "type": "string",
-        "doc": "Wiki project code (e.g., enwiki)"
-      },
-      { "name": "views", "type": "int", "doc": "Number of views" },
-      {
-        "name": "timestamp",
-        "type": { "type": "long", "logicalType": "timestamp-millis" },
-        "doc": "Timestamp of the view event"
+        "name": "tuple_struct",
+        "type": {
+          "type": "record",
+          "name": "PageViewTuple",
+          "fields": [
+            { "name": "access_type", "type": "int", "doc": "Type of access (e.g., 'desktop', 'mobile')" },
+            { "name": "user_type", "type": "int", "doc": "Type of user (e.g., 'user', 'spider')" },
+            { "name": "date", "type": "string", "doc": "Date in YYYY-MM-DD format" },
+            { "name": "views", "type": "int", "doc": "View count for that date" }
+          ]
+        },
+        "doc": "Struct containing pageview details"
       }
     ]
   },
@@ -25,93 +25,129 @@
     "type": "record",
     "name": "ClickStream",
     "fields": [
+      { "name": "page_hash", "type": "string", "doc": "Unique page identifier" },
+      { "name": "year_month", "type": "string", "doc": "Bucket key in YYYY-MM format" },
       {
-        "name": "source_page",
+        "name": "tuple_struct",
+        "type": {
+          "type": "record",
+          "name": "ClickStreamTuple",
+          "fields": [
+            { "name": "target_page",       "type": "string", "doc": "Target page identifier" },
+            { "name": "date",              "type": "string", "doc": "Date in YYYY-MM-DD format" },
+            { "name": "clicks",            "type": "int",    "doc": "Number of clicks for that date" },
+            { "name": "navigation_type",   "type": "string", "doc": "Navigation type (link, external, or other)" },
+            { "name": "referer_category",  "type": "string", "doc": "Referer category label (e.g., article, other-google)" }
+          ]
+        },
+        "doc": "Struct containing clickstream details"
+      }
+    ]
+  },
+
+  {
+    "type": "record",
+    "name": "OutboundPageLinks",
+    "fields": [
+      {
+        "name": "year_month",
         "type": "string",
-        "doc": "Source page ID (ensure string matches source)"
+        "doc": "Bucket key in YYYY-MM format"
       },
       {
-        "name": "target_page",
-        "type": "string",
-        "doc": "Target page ID (ensure string matches source)"
-      },
-      {
-        "name": "wiki_code",
-        "type": "string",
-        "doc": "Wiki project code (e.g., enwiki)"
-      },
-      { "name": "clicks", "type": "int", "doc": "Number of clicks" },
-      {
-        "name": "timestamp",
-        "type": { "type": "long", "logicalType": "timestamp-millis" },
-        "doc": "Timestamp of the click event"
+        "name": "tuple_struct",
+        "type": {
+          "type": "record",
+          "name": "OutboundPageLinkTuple",
+          "fields": [
+            {
+              "name": "pl_from",
+              "type": "int",
+              "doc": "Source page identifier"
+            },
+            {
+              "name": "pl_from_namespace",
+              "type": "int",
+              "doc": "Source page namespace"
+            },
+            {
+              "name": "pl_target_id",
+              "type": "int",
+              "doc": "Target page identifier"
+            },
+            {
+              "name": "timestamp",
+              "type": { "type": "string" },
+              "doc": "Timestamp of the link event"
+            }
+          ]
+        },
+        "doc": "Struct containing outbound pagelink details"
       }
     ]
   },
   {
     "type": "record",
-    "name": "PageLinks",
+    "name": "InboundPageLinks",
     "fields": [
       {
-        "name": "pl_from",
-        "type": "int",
-        "doc": "Source page ID (numeric)"
+        "name": "year_month",
+        "type": "string",
+        "doc": "Bucket key in YYYY-MM format"
       },
       {
-        "name": "pl_from_namespace",
-        "type": "int",
-        "doc": "Source page namespace"
-      },
-      {
-        "name": "pl_target_id",
-        "type": "long",
-        "doc": "Target page ID (numeric, may exceed int range)"
-      },
-      {
-        "name": "timestamp",
+        "name": "tuple_struct",
         "type": {
-          "type": "long",
-          "logicalType": "timestamp-millis"
+          "type": "record",
+          "name": "InboundPageLinkTuple",
+          "fields": [
+            {
+              "name": "pl_from",
+              "type": "int",
+              "doc": "Linking page identifier"
+            },
+            {
+              "name": "pl_from_namespace",
+              "type": "int",
+              "doc": "Source page namespace"
+            },
+            {
+              "name": "pl_target_id",
+              "type": "int",
+              "doc": "Page receiving the link"
+            },
+            {
+              "name": "timestamp",
+              "type": { "type": "string"},
+              "doc": "Timestamp of the link event"
+            }
+          ]
         },
-        "doc": "Timestamp associated with the link event"
+        "doc": "Struct containing inbound pagelink details"
       }
     ]
   },
+
+  
   {
     "type": "record",
     "name": "RevisionData",
     "fields": [
+      { "name": "page_hash",      "type": "string", "doc": "Unique page identifier" },
+      { "name": "year_month",     "type": "string", "doc": "Bucket key in YYYY-MM format" },
       {
-        "name": "page_id",
-        "type": "string",
-        "doc": "Page ID (ensure string matches source)"
-      },
-      { "name": "title", "type": "string" },
-      {
-        "name": "rev_id",
-        "type": "string",
-        "doc": "Revision ID (ensure string matches source)"
-      },
-      {
-        "name": "timestamp",
-        "type": { "type": "long", "logicalType": "timestamp-millis" },
-        "default": 0,
-        "doc": "Timestamp of the revision"
-      },
-      { "name": "contributor_id", "type": "string", "default": "string" },
-      { "name": "comment", "type": ["null", "string"], "default": null },
-      {
-        "name": "text",
-        "type": ["null", "string"],
-        "default": null,
-        "doc": "Full revision text (can be large)"
-      },
-      { "name": "is_redirect", "type": ["null", "boolean"], "default": null },
-      { "name": "namespace", "type": ["null", "int"], "default": null },
-      {
-        "name": "hash_id",
-        "type": "string",
-        "doc": "Hash identifier linking this revision to its parent document"
+        "name": "tuple_struct",
+        "type": {
+          "type": "record",
+          "name": "RevisionTuple",
+          "fields": [
+            { "name": "hash_id",          "type": "string", "doc": "Hash identifier linking this revision to its parent document" },
+            { "name": "rev_id",           "type": "string", "doc": "Revision ID (ensure string matches source)" },
+            { "name": "timestamp",        "type": "string", "doc": "ISO8601 timestamp of the revision" },
+            { "name": "contributor_id",   "type": "string", "doc": "Identifier of the contributor (user ID or username)" }
+          ]
+        },
+        "doc": "Struct containing revision details"
       }
     ]
   },
@@ -119,26 +155,46 @@
     "type": "record",
     "name": "WikiDocument",
     "fields": [
-      { "name": "page_id", "type": "string", "doc": "Document identifier" },
-      { "name": "wiki_code", "type": "string" },
-      { "name": "title", "type": "string" },
+      { "name": "page_hash",   "type": "string",           "doc": "Unique page identifier" },
+      { "name": "year_month",  "type": "string",           "doc": "Bucket key in YYYY-MM format" },
+      { "name": "wiki_code",    "type": "string",           "doc": "Wiki project code (e.g., enwiki)" },
       {
-        "name": "timestamp",
-        "type": { "type": "long", "logicalType": "timestamp-millis" },
-        "doc": "Timestamp of document creation or main relevance"
-      },
-      { "name": "is_redirect", "type": ["null", "boolean"], "default": null },
-      { "name": "namespace", "type": "int" },
+        "name": "tuple_struct",
+        "type": {
+          "type": "record",
+          "name": "WikiDocumentTuple",
+          "fields": [
+            { "name": "title",        "type": "string",           "doc": "Page title" },
+            { "name": "timestamp",        "type": "string", "doc": "ISO8601 timestamp of the revision" },
+            { "name": "is_redirect",  "type": ["null","boolean"], "doc": "Whether the page is a redirect" },
+            { "name": "hash_id",      "type": "string",           "doc": "Hash identifier for the document content/state" },
+            { "name": "last_updated", "type": ["null","string"],  "doc": "ISO8601 timestamp when this document was last updated" }
+          ]
+        },
+        "doc": "Struct containing wiki document metadata"
+      }
+    ]
+  },
+  {
+    "type": "record",
+    "name": "PageInfo",
+    "fields": [
+      { "name": "page_hash",        "type": "string", "doc": "Unique page identifier" },
+      { "name": "year_month",       "type": "string", "doc": "Bucket key in YYYY-MM format" },
       {
-        "name": "hash_id",
-        "type": "string",
-        "doc": "A hash identifier for the document content/state"
-      },
-      {
-        "name": "last_updated",
-        "type": ["null", { "type": "long", "logicalType": "timestamp-millis" }],
-        "default": null,
-        "doc": "Timestamp when this document record was last updated"
+        "name": "tuple_struct",
+        "type": {
+          "type": "record",
+          "name": "PageInfoTuple",
+          "fields": [
+            { "name": "page_id",          "type": "int",     "doc": "Unique page identifier" },
+            { "name": "page_namespace",   "type": "int",     "doc": "Page namespace" },
+            { "name": "page_title",       "type": "string",  "doc": "Page title" },
+            { "name": "page_is_redirect", "type": "int", "doc": "Whether the page is a redirect" },
+            { "name": "page_touched",     "type": "string",  "doc": "Last touched timestamp (YYYYMMDDHHMMSS)" }
+          ]
+        },
+        "doc": "Struct containing page metadata details"
       }
     ]
   }

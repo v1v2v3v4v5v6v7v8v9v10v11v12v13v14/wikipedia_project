@@ -1,8 +1,9 @@
 avro_utils
 config
+downloading
+management
 persistence
 processing
 scripts
-tests
 wiki_io
 wiki_utils

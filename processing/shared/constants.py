@@ -15,7 +15,8 @@ USER_TYPES = {
     "user": 0,
     "spider": 1,
     "bot": 2,
-    "all-agents": 3
+    "automated": 3,
+    "all-agents": 4
 }
 
 # Mapping of source fields to internal TSV pageview fields to explicitly

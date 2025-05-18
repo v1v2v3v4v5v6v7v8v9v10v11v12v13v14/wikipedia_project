@@ -1,58 +1,67 @@
-version: '3'
+x-base: &base-service
+  restart: unless-stopped
+  networks:
+    - kafka-net
+  platform: linux/amd64
+
+x-healthcheck: &default-healthcheck
+  interval: 10s
+  timeout: 10s
+  retries: 5
+  start_period: 30s
+
+x-python-service: &python-service
+  <<: *base-service
+  image: python:3.10-slim
+  volumes:
+    - ./data:/data
+    - ./:/app
+  working_dir: /app
 
 services:
-  zookeeper:
-    image: bitnami/zookeeper:latest
-    container_name: zookeeper
-    environment:
-      - ZOO_ENABLE_AUTH=yes
-      - ZOO_SERVER_USERS=kafka
-      - ZOO_SERVER_PASSWORDS=kafka-secret
-    ports:
-      - "2181:2181"
-    volumes:
-      - zookeeper_data:/bitnami/zookeeper
-    networks:
-      - kafka-net
-    healthcheck:
-      test: echo ruok | nc localhost 2181 | grep imok
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
-
   kafka:
-    image: bitnami/kafka:latest
+    <<: *base-service
+    image: bitnami/kafka:3.5.1
     container_name: kafka
-    depends_on:
-      zookeeper:
-        condition: service_healthy
     ports:
       - "9092:9092"
+      - "29092:29092"
     environment:
-      - KAFKA_BROKER_ID=1
-      - KAFKA_CFG_LISTENERS=INTERNAL://:9093,EXTERNAL://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://kafka:9093,EXTERNAL://localhost:9092
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_LISTENERS=INTERNAL://:9093,EXTERNAL://:9092,HOST://:29092,CONTROLLER://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://kafka:9093,EXTERNAL://localhost:9092,HOST://host.docker.internal:29092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
       - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=INTERNAL
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_CFG_AUTHORIZER_CLASS_NAME=kafka.security.authorizer.AclAuthorizer
-      - KAFKA_CFG_ALLOW_EVERYONE_IF_NO_ACL_FOUND=true
-      - KAFKA_ZOOKEEPER_USER=kafka
-      - KAFKA_ZOOKEEPER_PASSWORD=kafka-secret
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@localhost:9094
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CFG_DELETE_TOPIC_ENABLE=true
+      - KAFKA_CREATE_TOPICS=clickstream_topic:1:1,pageview_topic:1:1,wikidocument_topic:1:1,revision_data_topic:1:1,outbound_pagelinks_topic:1:1,inbound_pagelinks_topic:1:1
     volumes:
       - kafka_data:/bitnami/kafka
-    networks:
-      - kafka-net
     healthcheck:
-      test: kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
+      <<: *default-healthcheck
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
+    command: >
+      /bin/bash -c "
+      /opt/bitnami/scripts/kafka/entrypoint.sh /opt/bitnami/scripts/kafka/run.sh &
+      sleep 30 &&
+      kafka-topics.sh --bootstrap-server localhost:9092 --create --if-not-exists --topic clickstream_topic --partitions 3 --replication-factor 1 &&
+      kafka-topics.sh --bootstrap-server localhost:9092 --create --if-not-exists --topic pageview_topic --partitions 3 --replication-factor 1 &&
+      kafka-topics.sh --bootstrap-server localhost:9092 --create --if-not-exists --topic wikidocument_topic --partitions 3 --replication-factor 1 &&
+      kafka-topics.sh --bootstrap-server localhost:9092 --create --if-not-exists --topic revision_data_topic --partitions 3 --replication-factor 1 &&
+      kafka-topics.sh --bootstrap-server localhost:9092 --create --if-not-exists --topic outbound_pagelinks_topic --partitions 3 --replication-factor 1 &&
+      kafka-topics.sh --bootstrap-server localhost:9092 --create --if-not-exists --topic inbound_pagelinks_topic --partitions 3 --replication-factor 1 &&
+      kafka-topics.sh --bootstrap-server localhost:9092 --create --if-not-exists --topic inbound_pagelinks_topic --partitions 3 --replication-factor 1 &&
+      tail -f /dev/null
+      "
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:latest
+    <<: *base-service
+    image: confluentinc/cp-schema-registry:7.9.0
     container_name: schema-registry
     depends_on:
       kafka:
@@ -64,16 +73,12 @@ services:
       - SCHEMA_REGISTRY_HOST_NAME=schema-registry
       - SCHEMA_REGISTRY_LISTENERS=http://0.0.0.0:8081
       - SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL=PLAINTEXT
-    networks:
-      - kafka-net
     healthcheck:
-      test: curl --silent --fail http://localhost:8081/subjects || exit 1
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
+      <<: *default-healthcheck
+      test: ["CMD-SHELL", "curl --silent --fail http://localhost:8081/subjects || exit 1"]
 
   kafka-ui:
+    <<: *base-service
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
     depends_on:
@@ -85,36 +90,94 @@ services:
       - KAFKA_CLUSTERS_0_NAME=local
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9093
       - KAFKA_CLUSTERS_0_SCHEMAREGISTRY=http://schema-registry:8081
-    networks:
-      - kafka-net
 
-  mariadb:
-    image: mariadb:latest
-    container_name: mariadb
-    ports:
-      - "3306:3306"
+  mongodb:
+    <<: *base-service
+    image: mongo:6.0.5
+    container_name: mongodb
     environment:
-      - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_DATABASE=wikidb
-      - MYSQL_USER=wikiuser
-      - MYSQL_PASSWORD=wikipass
+      - MONGO_INITDB_ROOT_USERNAME=wikiuser
+      - MONGO_INITDB_ROOT_PASSWORD=wikipass
+      - MONGO_INITDB_DATABASE=wikidb
+    ports:
+      - "27017:27017"
     volumes:
-      - mariadb_data:/var/lib/mysql
-      - ./sql:/docker-entrypoint-initdb.d
-    networks:
-      - kafka-net
+      - mongodb_data:/data/db
     healthcheck:
-      test: mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      <<: *default-healthcheck
+      test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongo --username wikiuser --password wikipass --authenticationDatabase admin --quiet"]
       start_period: 15s
+
+  app:
+    <<: *python-service
+    container_name: wiki-app
+    depends_on:
+      kafka:
+        condition: service_healthy
+      schema-registry:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    environment:
+      - MONGO_URI=mongodb://wikiuser:wikipass@mongodb:27017/wikidb
+      - DB_NAME=wikidb
+      - SCHEMA_PATH=/app/avro_schemas.json
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9093
+      - SCHEMA_REGISTRY_URL=http://schema-registry:8081
+    command: ["bash", "-lc", "pip install -r requirements.txt && python app.py"]
+
+  flink-jobmanager:
+    <<: *base-service
+    image: apache/flink:1.17.0
+    container_name: flink-jobmanager
+    ports:
+      - "8082:8081"
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+    command: jobmanager
+    depends_on:
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      <<: *default-healthcheck
+      test: ["CMD-SHELL", "curl --fail http://localhost:8081 || exit 1"]
+
+  flink-taskmanager:
+    <<: *base-service
+    image: apache/flink:1.17.0
+    container_name: flink-taskmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+    command: taskmanager
+    depends_on:
+      flink-jobmanager:
+        condition: service_healthy
+
+  cassandra:
+    <<: *base-service
+    image: cassandra:4.1
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=wiki-cluster
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_RACK=rack1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_START_RPC=true
+      - CASSANDRA_NUM_TOKENS=16
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      <<: *default-healthcheck
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES;' || exit 1"]
+      start_period: 40s
 
 networks:
   kafka-net:
     driver: bridge
 
 volumes:
-  zookeeper_data:
   kafka_data:
-  mariadb_data:
+  mongodb_data:
+  cassandra_data:
