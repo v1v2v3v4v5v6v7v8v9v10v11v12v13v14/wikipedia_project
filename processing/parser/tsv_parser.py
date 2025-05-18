@@ -6,7 +6,7 @@ import logging
 import io
 from collections import defaultdict, Counter, namedtuple
 from datetime import datetime, timezone
-from typing import Dict, Set, Optional, Any, Iterator, TextIO, BinaryIO, Union, List
+from typing import Dict, Set, Optional, Any, Iterator, TextIO, BinaryIO, Union, List, Tuple
 from icecream import ic
 from processing.shared.file_utils import get_text_stream
 from processing.parser.base_parser import BaseParser
@@ -215,11 +215,25 @@ class TSVParser(BaseParser):
             self.logger.error(f"Error parsing clickstream line: {str(e)}", exc_info=True)
             self.stats["errors"] += 1
             return None
-        
+
+
+    def _extract_pageview_fields(self, parts: List[str]) -> Tuple[str, Optional[str], str, str, str]:
+        """Return structured fields from a pageview line."""
+        mapping = {
+            3: lambda p: (p[0], None, p[1], p[2], ''),
+            4: lambda p: (p[0], p[1], p[2], p[3], ''),
+            5: lambda p: (p[0], p[1], p[3], p[4], ''),
+            6: lambda p: (p[0], p[1], p[3], p[4], p[5]),
+        }
+        handler = mapping.get(len(parts))
+        if not handler:
+            raise ValueError("invalid_format")
+        return handler(parts)
+
 
     def parse_pageview_line(
-            self, 
-            line: str, 
+            self,
+            line: str,
             filename: str,
             wiki_filter: Optional[Set[str]] = None,
         ) -> Optional[Dict[str, Any]]:
@@ -228,20 +242,10 @@ class TSVParser(BaseParser):
             return None
 
         parts = line.split()
-        
-        if len(parts) == 3:
-            domain, access_type, view_data = parts
-            title = None
-            hourly_views_str = ''
-        elif len(parts) == 4:
-            domain, title, access_type, view_data = parts
-            hourly_views_str = ''
-        elif len(parts) == 5:
-            domain, title, _, access_type, view_data = parts
-            hourly_views_str = ''
-        elif len(parts) == 6:
-            domain, title, _, access_type, view_data, hourly_views_str = parts
-        else:
+
+        try:
+            domain, title, access_type, view_data, hourly_views_str = self._extract_pageview_fields(parts)
+        except ValueError:
             self.filter_counts["invalid_format"] += 1
             return None
 
