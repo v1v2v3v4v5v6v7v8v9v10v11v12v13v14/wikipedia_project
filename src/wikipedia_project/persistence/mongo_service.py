@@ -1,5 +1,5 @@
 from pymongo import MongoClient, UpdateOne # Changed from ReplaceOne
-from config.settings import AVRO_SCHEMA_PATH # Assuming this is still relevant for input
+from wikipedia_project.config.settings import AVRO_SCHEMA_PATH # Assuming this is still relevant for input
 from pymongo.errors import PyMongoError
 from typing import List, Dict, Any, Optional, Union
 # from dataclasses import asdict # Not used

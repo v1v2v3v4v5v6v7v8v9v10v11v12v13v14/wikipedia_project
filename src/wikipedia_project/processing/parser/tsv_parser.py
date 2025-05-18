@@ -4,10 +4,10 @@ from collections import defaultdict, namedtuple
 from datetime import datetime, timezone
 from typing import Dict, Set, Optional, Any, Iterator, TextIO, BinaryIO, Union, List, Tuple
 from urllib.parse import urlparse
-from processing.parser.base_parser import BaseParser
-from wiki_utils.datetime_utils import extract_date_from_filename, get_year_month_from_filename, normalize_timestamp_format
-from wiki_utils.hashing_utils import WikimediaIdentifiers
-from processing.shared.constants import DEFAULT_PREFIXES, ACCESS_TYPES, USER_TYPES, NUMERIC_DEFAULTS
+from wikipedia_project.processing.parser.base_parser import BaseParser
+from wikipedia_project.wiki_utils.datetime_utils import extract_date_from_filename, get_year_month_from_filename, normalize_timestamp_format
+from wikipedia_project.wiki_utils.hashing_utils import WikimediaIdentifiers
+from wikipedia_project.processing.shared.constants import DEFAULT_PREFIXES, ACCESS_TYPES, USER_TYPES, NUMERIC_DEFAULTS
 
 DOMAIN_MAP = {
     "google.": "other-google",

@@ -1,9 +1,23 @@
 {
-    "name": "Python: Parser Test",
-    "type": "python",
-    "request": "launch",
-    "program": "${workspaceFolder}/tests/parser_test.py",
-    "env": {
-        "PYTHONPATH": "${workspaceFolder}"
-    }
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Parser Test",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/tests/parser_test.py",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Python: Mongo Test",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/tests/mongo_test.py",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        }
+    ]
 }

@@ -1,11 +1,11 @@
 # processing/parser/base_parser.py
 from abc import ABC, abstractmethod
-from processing.shared.file_utils import get_text_stream
+from wikipedia_project.processing.shared.file_utils import get_text_stream
 from typing import Iterator, TextIO, Dict, Any, Optional, Union, List, Set, BinaryIO
 import logging
 from icecream import ic
 
-from processing.shared.file_utils import get_binary_stream, get_text_stream, safe_close, is_binary_stream
+from wikipedia_project.processing.shared.file_utils import get_binary_stream, get_text_stream, safe_close, is_binary_stream
 import bz2
 import gzip
 import io

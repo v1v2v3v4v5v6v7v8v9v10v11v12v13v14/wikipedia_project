@@ -6,8 +6,8 @@ from typing import Iterator, Optional, Dict, Any, TextIO, List, Union
 from lxml import etree
 from icecream import ic
 
-from processing.parser.base_parser import BaseParser
-from wiki_utils.datetime_utils import (
+from wikipedia_project.processing.parser.base_parser import BaseParser
+from wikipedia_project.wiki_utils.datetime_utils import (
     parse_wikimedia_timestamp,
     get_year_month_from_filename,
 )

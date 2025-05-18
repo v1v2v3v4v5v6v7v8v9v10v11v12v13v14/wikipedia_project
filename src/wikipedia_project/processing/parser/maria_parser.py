@@ -11,20 +11,20 @@ from fastavro import parse_schema, validate, schemaless_writer
 from fastavro._validation import ValidationError
 from icecream import ic
 
-from processing.parser.base_parser import SQLDumpParser
+from wikipedia_project.processing.parser.base_parser import SQLDumpParser
 from datetime import datetime, timezone
 
 # --- Schema-driven parsing infrastructure ---
 import re
 from typing import Any, Callable, Dict, Iterator, List, Optional, Pattern, TextIO, BinaryIO
-from processing.parser.base_parser import SQLDumpParser
-from wiki_utils.datetime_utils import (
+from wikipedia_project.processing.parser.base_parser import SQLDumpParser
+from wikipedia_project.wiki_utils.datetime_utils import (
     extract_date_from_filename,
     get_year_month_from_filename,
     normalize_timestamp_format,
 )
 from datetime import datetime, timezone
-from wiki_utils.hashing_utils import WikimediaIdentifiers
+from wikipedia_project.wiki_utils.hashing_utils import WikimediaIdentifiers
 
 FieldDef = Tuple[str, Callable[[str], Any]]
 

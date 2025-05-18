@@ -1,0 +1,2 @@
+2025-05-18 13:26:58,295 - mongo_persistence - ERROR - Missing required fields: ['access_type', 'user_type', 'date', 'views']
+2025-05-18 13:26:58,296 - mongo_persistence - INFO - MongoDB connection closed

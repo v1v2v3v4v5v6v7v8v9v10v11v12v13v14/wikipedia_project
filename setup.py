@@ -7,10 +7,32 @@ setup(
     packages=find_packages(where="src"),
     install_requires=[
         "requests>=2.20.0",
-        # Add others like pymongo if needed
+        "pymongo",
+        "confluent-kafka",
+        "pyspark",
+        "pyarrow",
+        "lxml",
+        "beautifulsoup4",
+        "python-dateutil",
+        "pytz",
+        "jsonschema",
+        "Flask",
+        # Include other project dependencies as needed
     ],
+    extras_require={
+        "dev": [
+            "pytest",
+            "debugpy",
+            "tqdm",
+            "numpy",
+            "pandas",
+        ]
+    },
     python_requires=">=3.8",
+    entry_points={
+        "console_scripts": [
+            # Add CLI entry points if you have scripts, e.g.,
+            # 'wiki-parser=wikipedia_project.parser:main'
+        ],
+    },
 )
-
-
-

@@ -3,7 +3,7 @@ import os
 import logging
 from typing import Dict, Any, Optional, List, Union
 from confluent_kafka import Producer
-from config.settings import KAFKA_TOPIC, KAFKA_BROKERS, PARTITION_KEY_MAPPING
+from wikipedia_project.config.settings import KAFKA_TOPIC, KAFKA_BROKERS, PARTITION_KEY_MAPPING
 from datetime import datetime
 
 class KafkaProducer:
