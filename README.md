@@ -26,3 +26,26 @@ consume multiple Kafka topics in a single Flink job. The streams are merged with
 `union` so that a single check against Cassandra can be performed for each
 unified event. Adjust the topic names, Kafka properties and Cassandra query to
 match your environment.
+
+
+## Running Tests
+
+To run tests without installing the package, create a local initializer that adds
+your project root to `sys.path`:
+
+```python
+import os
+import sys
+
+PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+```
+
+Save this as `tests/__init__.py` and invoke your tests as modules so the
+initializer runs:
+
+```bash
+python -m tests.parser_test
+```
+
