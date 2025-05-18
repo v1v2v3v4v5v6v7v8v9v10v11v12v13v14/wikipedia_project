@@ -4,7 +4,7 @@ Utilities for downloading Wikimedia dump files
 
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Tuple
 import concurrent
@@ -335,7 +335,7 @@ class WikimediaDownloader:
                         self.logger.info(f"File exists with correct size: {output_path}")
                         return True
 
-                start_time = datetime.now()
+                start_time = datetime.now(timezone.utc)
                 with self.session.get(url, stream=True, timeout=timeout) as r:
                     r.raise_for_status()
                     total = int(r.headers.get("Content-Length", 0))

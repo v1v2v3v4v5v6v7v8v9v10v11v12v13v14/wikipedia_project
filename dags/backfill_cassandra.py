@@ -7,7 +7,7 @@ from pathlib import Path
 from pymongo.errors import PyMongoError
 from icecream import ic
 from logging.handlers import RotatingFileHandler
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import List, Dict, Any, Optional, Union
 from tests.parser_test import SchemaTester
 from persistence.mongo_service import MongoPersistenceService
@@ -58,7 +58,7 @@ def load_test_data(test_name:str, test_config: Dict, sample_limit = 7):
 
 def task_process_test_configs():
     results = {}
-    current_timestamp = datetime.now()
+    current_timestamp = datetime.now(timezone.utc)
     for items in test_config.items():
         test_name, (sample_path, parser_factory, topic) = items
         wiki_code, timestamp = ParserTestConfig.extract_wiki_metadata(sample_path)
@@ -76,7 +76,7 @@ def task_process_test_configs():
     return results
 
 from airflow.decorators import dag, task
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 default_args = {
     'owner': 'airflow',
@@ -98,7 +98,7 @@ def process_test_configs_dag():
     @task
     def process_test_configs():
         results = {}
-        current_timestamp = datetime.now()
+        current_timestamp = datetime.now(timezone.utc)
         for items in test_config.items():
             test_name, (sample_path, parser_factory, topic) = items
             wiki_code, timestamp = ParserTestConfig.extract_wiki_metadata(sample_path)
@@ -118,3 +118,4 @@ def process_test_configs_dag():
     process_test_configs()
 
 dag_instance = process_test_configs_dag()
+

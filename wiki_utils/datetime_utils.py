@@ -1,6 +1,6 @@
 # wiki_utils/datetime_utils.py
 import re
-from datetime import datetime, date, timezone
+from datetime import datetime, timezone
 from typing import Optional, Union
 import logging
 from pathlib import Path

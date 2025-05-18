@@ -6,7 +6,7 @@ from typing import List, Dict, Any, Optional, Union
 import json
 import logging
 from logging.handlers import RotatingFileHandler
-from datetime import datetime
+from datetime import datetime, timezone
 # from wiki_utils.datetime_utils import make_year_month # Keep if used
 
 # Constants - these would be defined elsewhere or imported
@@ -263,10 +263,12 @@ class MongoPersistenceService:
                 if isinstance(date_value, str):
                     dt = datetime.fromisoformat(date_value.replace("Z", "+00:00"))
                 elif isinstance(date_value, (int, float)):
-                    dt = datetime.utcfromtimestamp(date_value)
+                    dt = datetime.fromtimestamp(date_value, tz=timezone.utc)
                 else:
                     dt = date_value  # Assume already datetime
-                date_str = dt.strftime("%Y-%m-%d")
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+
             except Exception as e:
                 self.logger.error(f"Invalid timestamp: {e}")
                 return False
@@ -510,8 +512,8 @@ class MongoPersistenceService:
                     dt = datetime.fromisoformat(touched.replace("Z", "+00:00"))
                 else:
                     dt = touched
-                year_month = dt.strftime("%Y-%m")
-                self._upsert_page_bucket(page_hash, year_month, update_query)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
             except Exception as bucket_err:
                 self.logger.error(f"save_page_info: invalid page_touched value for monthly bucket: {touched}, error: {bucket_err}")
             self.logger.info(f"Page info saved for page_hash: {page_hash} (all-time and monthly)")

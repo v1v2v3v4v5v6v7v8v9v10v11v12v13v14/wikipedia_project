@@ -1,5 +1,5 @@
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Union
 from config.settings import OUTPUT_DIRECTORY_PATH
 

@@ -2,7 +2,7 @@ import logging
 import os
 import re
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 #from wiki_utils.compression import decompress_file
@@ -291,7 +291,7 @@ class FileDiscoverer:
         remote_names: List[str] = []
         # Time-based data (pageviews, clickstream)
         if data_type in ["pageviews", "clickstream"]:
-            for year in (years or [datetime.now().year]):
+            for year in (years or [datetime.now(timezone.utc).year]):
                 for month in (months or list(range(1, 13))):
                     ym = f"{year}-{month:02d}"
                     url = self._build_time_based_url(data_type, ym)
