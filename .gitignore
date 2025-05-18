@@ -4,7 +4,8 @@ __pycache__/
 *.pyd
 output/
 parser_test.py
-tests/
+tests/*
+!tests/__init__.py
 *.md
 !README.md
 beam_env/
