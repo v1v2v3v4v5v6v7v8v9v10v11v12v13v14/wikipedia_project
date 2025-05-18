@@ -11,5 +11,5 @@ beam_env/
 flink_env/
 venv/
 .venv/
-*.egg-info
-__pycache__/
+*.egg-info/
+.DS_Store
