@@ -85,6 +85,31 @@ def extract_date_from_filename(filename: str) -> Optional[str]:
     
     return None
 
+def get_year_month_from_filename(filename: str) -> Optional[str]:
+    """Return the ``YYYY-MM`` year-month portion from Wikimedia dump filenames.
+
+    This helper mirrors :func:`extract_date_from_filename` but returns only the
+    year and month components when a date is present.
+
+    Args:
+        filename: The path or name of the dump file.
+
+    Returns:
+        A string in ``YYYY-MM`` format if a date could be parsed, otherwise
+        ``None``.
+    """
+    path = Path(filename) if not isinstance(filename, Path) else filename
+    path_str = str(path)
+
+    for pattern in FILENAME_PATTERNS:
+        match = re.search(pattern, path_str)
+        if match:
+            groups = match.groups()
+            if len(groups) >= 2:  # YYYY, MM at minimum
+                return f"{groups[0]}-{groups[1]}"
+
+    return None
+
 def convert_to_utc(dt: datetime) -> datetime:
     """Ensure datetime is timezone-aware and in UTC"""
     if dt.tzinfo is None:

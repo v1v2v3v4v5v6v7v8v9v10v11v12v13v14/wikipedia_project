@@ -7,7 +7,10 @@ from lxml import etree
 from icecream import ic
 
 from processing.parser.base_parser import BaseParser
-from wiki_utils.datetime_utils import parse_wikimedia_timestamp
+from wiki_utils.datetime_utils import (
+    parse_wikimedia_timestamp,
+    get_year_month_from_filename,
+)
 ic.enable()
 
 WIKI_NS = {'mw': 'http://www.mediawiki.org/xml/export-0.11/'}
@@ -104,15 +107,17 @@ class RevisionParser(BaseParser):
             raise
         
     def _extract_metadata_from_filename(self, file_name: str) -> tuple:
-        match = re.match(r'([a-z]+)-(\d{8})', file_name)
-        if match:
-            file_wiki, date_str = match.groups()
+        file_wiki_match = re.match(r'([a-z]+)-', file_name)
+        file_wiki = file_wiki_match.group(1) if file_wiki_match else self.wiki_code
+
+        ym = get_year_month_from_filename(file_name)
+        if ym:
             try:
-                file_date = datetime.strptime(date_str, "%Y%m%d").date()
+                file_date = datetime.strptime(f"{ym}-01", "%Y-%m-%d").date()
                 return file_wiki, file_date
             except ValueError:
                 pass
-        return self.wiki_code, None
+        return file_wiki, None
 
     def _extract_page_data(self, page_elem: etree._Element) -> Optional[Dict[str, Any]]:
         try:
