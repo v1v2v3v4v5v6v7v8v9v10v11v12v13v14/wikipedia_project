@@ -150,7 +150,11 @@ class RevisionParser(BaseParser):
                 rev_ts = revision_data.get('timestamp', 0)
                 year_month = datetime.fromtimestamp(rev_ts, timezone.utc).strftime("%Y-%m") if rev_ts else ''
                 wiki_code = page_data['wiki_code']
-                yield ic({
+                timestamp = datetime.fromtimestamp(
+                    revision_data.get('timestamp', 0), timezone.utc
+                ).isoformat()
+
+                record = {
                     "page_hash": page_hash,
                     "year_month": year_month,
                     "wiki_code": wiki_code,
@@ -158,10 +162,12 @@ class RevisionParser(BaseParser):
                         "hash_id": page_hash,
                         "title": page_data.get('title', ''),
                         "rev_id": revision_data.get('rev_id', ''),
-                        "timestamp": datetime.fromtimestamp(revision_data.get('timestamp', 0), timezone.utc).isoformat(),
+                        "timestamp": timestamp,
                         "contributor_id": str(revision_data.get('contributor_id', ''))
                     }
-                })
+                }
+
+                yield ic(record)                
                 self.stats['revisions'] += 1
             else:
                 self.stats['skipped_revisions'] += 1

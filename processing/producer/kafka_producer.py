@@ -4,6 +4,7 @@ import logging
 from typing import Dict, Any, Optional, List, Union
 from confluent_kafka import Producer
 from config.settings import KAFKA_TOPIC, KAFKA_BROKERS, PARTITION_KEY_MAPPING
+from datetime import datetime
 
 class KafkaProducer:
     """Kafka producer with schema-aware message handling and detailed logging."""
@@ -94,6 +95,23 @@ class KafkaProducer:
             )
             logging.debug(f"Message details: {msg.value().decode('utf-8')[:200]}...")  # Log first 200 chars
 
+    def _serialize_message(self, message: Any) -> bytes:
+        """ Safely serialize messages, converting datetime objects to ISO format strings."""
+        def clean_datetimes(obj):
+            if isinstance(obj, dict):
+                return {k: clean_datetimes(k) for k,v in obj.items()}
+            elif isinstance(obj, list):
+                return [clean_datetimes(i) for i in obj]
+            elif isinstance(obj, datetime):
+                return obj.isoformat()
+            else:
+                return obj
+            safe_msg = clean_datetimes(message)
+            return json.dumps(safe_msg).encode("utf-8")
+        
+            
+
+
     def send(self, message: Union[Dict[str, Any], List[Dict[str, Any]]], partition_key: Optional[bytes] = None):
         """Send one or more messages to Kafka with enhanced logging."""
         messages = [message] if not isinstance(message, list) else message
@@ -112,7 +130,7 @@ class KafkaProducer:
                     self.producer.produce(
                         topic=self.topic,
                         key=partition_key,
-                        value=json.dumps(msg_copy).encode("utf-8"),
+                        value=self._serialize_message(msg_copy),
                         callback=self.delivery_report
                     )
                     self.producer.poll(0)
@@ -130,13 +148,13 @@ class KafkaProducer:
                     self.producer.produce(
                         topic=self.topic,
                         key=key_auto,
-                        value=json.dumps(msg_copy).encode("utf-8"),
+                        value=self._serialize_message(msg_copy),
                         callback=self.delivery_report
                     )
                 else:
                     self.producer.produce(
                         topic=self.topic,
-                        value=json.dumps(msg_copy).encode("utf-8"),
+                        value=self._serialize_message(msg_copy),
                         callback=self.delivery_report
                     )
                 self.producer.poll(0)
