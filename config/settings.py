@@ -1,3 +1,10 @@
+# Standard library imports
+import os
+from pathlib import Path
+
+# Base directory of the project (``config`` lives one level below the root)
+ROOT_DIR = Path(__file__).resolve().parents[1]
+
 # Database configuration details for connecting to MongoDB
 # Adjust 'host' to 'mongodb' when using Docker Compose networking
 # This allows the application to connect to the MongoDB service defined in the Docker Compose file.
@@ -19,13 +26,28 @@ PARSER_CONFIG = {
 # Downloader configuration, paths should align with Docker volumes for persistent storage
 # Make sure the download_dir matches the path of the mounted volume in the Docker container
 DOWNLOAD_CONFIG = {
-    'download_dir': '/Users/danielkarwoski/Downloads/wikipedia_project/data/downloads',
-    'max_retries': 3,
-    'retry_delay': 2,
+    # Path where downloaded dumps will be stored
+    'download_dir': os.environ.get(
+        'DOWNLOAD_DIR', str(ROOT_DIR / 'data' / 'downloads')
+    ),
+    'max_retries': int(os.environ.get('DOWNLOAD_MAX_RETRIES', 3)),
+    'retry_delay': int(os.environ.get('DOWNLOAD_RETRY_DELAY', 2)),
 }
-AVRO_SCHEMA_PATH = '/Applications/wikipedia_project/avro_utils/avro_schemas.json'
-PERSISTENCE_LOGFILE_PATH = '/Users/danielkarwoski/Downloads/wikipedia_project/persistence/mongodb_log.py'
-OUTPUT_DIRECTORY_PATH = '/Users/danielkarwoski/Downloads/wikipedia_project/output/'
+
+# Path to the Avro schema file used by MongoPersistenceService
+AVRO_SCHEMA_PATH = os.environ.get(
+    'AVRO_SCHEMA_PATH', str(ROOT_DIR / 'avro_utils' / 'avro_schemas.json')
+)
+
+# Location of the persistence service log file
+PERSISTENCE_LOGFILE_PATH = os.environ.get(
+    'PERSISTENCE_LOGFILE_PATH', str(ROOT_DIR / 'logs' / 'persistence.log')
+)
+
+# Base directory for output and temporary files
+OUTPUT_DIRECTORY_PATH = os.environ.get(
+    'OUTPUT_DIRECTORY_PATH', str(ROOT_DIR / 'output')
+)
 
 # Kafka Configuration
 KAFKA_BROKERS = 'localhost:9092'

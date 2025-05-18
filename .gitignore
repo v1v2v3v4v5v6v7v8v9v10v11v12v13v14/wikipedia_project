@@ -6,3 +6,4 @@ output/
 parser_test.py
 tests/
 *.md
+!README.md
