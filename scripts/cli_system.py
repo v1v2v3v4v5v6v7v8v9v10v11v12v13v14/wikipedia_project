@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 import argparse
-import os
 import sys
-from typing import List, Optional, Dict, Any
-import requests
+from typing import List, Optional, Dict
 from pathlib import Path
 import logging
 import json
@@ -174,13 +172,13 @@ class CLISystem:
         self.logger.info(f"Running batch download from {batch_file}")
         try:
             with open(batch_file, 'r') as f:
-                requests = json.load(f)
+                batch_requests = json.load(f)
 
             # Explicit parser linkage with support for multiple wiki codes:
             # If a batch request contains multiple wiki_codes, we create a separate parser instance for each code.
             # This ensures that the parser_map can differentiate by both data_type and wiki_code.
             parser_map = {}
-            for req in requests:
+            for req in batch_requests:
                 data_type = req.get("data_type")
                 wiki_codes = ic(req.get("wiki_codes")) or []
                 # If no wiki_codes specified, use None as key
@@ -204,7 +202,7 @@ class CLISystem:
                 parsers=parser_map
             )
             # Execute batch download
-            results = download_manager.batch_download(requests)
+            results = download_manager.batch_download(batch_requests)
             # Report results
             for data_type, result in results.items():
                 if "error" in result:
