@@ -284,9 +284,9 @@ class FileDiscoverer:
         """
         # Get local files and their basenames
         local_paths = self.discover_local_files(data_type, years, months, wiki_codes)
-        print(f"local paths: {local_paths}")
+        self.logger.debug(f"local paths: {local_paths}")
         local_names = {str(Path(p).name) for p in local_paths}
-        print(f"local_names: {local_names}")
+        self.logger.debug(f"local_names: {local_names}")
         
         remote_names: List[str] = []
         # Time-based data (pageviews, clickstream)
