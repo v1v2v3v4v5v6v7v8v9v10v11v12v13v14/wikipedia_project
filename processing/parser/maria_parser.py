@@ -18,7 +18,11 @@ from datetime import datetime, timezone
 import re
 from typing import Any, Callable, Dict, Iterator, List, Optional, Pattern, TextIO, BinaryIO
 from processing.parser.base_parser import SQLDumpParser
-from wiki_utils.datetime_utils import extract_date_from_filename, normalize_timestamp_format
+from wiki_utils.datetime_utils import (
+    extract_date_from_filename,
+    normalize_timestamp_format,
+    get_year_month_from_filename,
+)
 from datetime import datetime, timezone
 from wiki_utils.hashing_utils import WikimediaIdentifiers
 
@@ -78,20 +82,14 @@ class GenericSQLParser(SQLDumpParser):
         names, cast_fns = zip(*self.schema.fields)
         values = [fn(g) for fn, g in zip(cast_fns, groups)]
         record = dict(zip(names, values))
-        # compute year_month, parsing strings or numeric ts
-        year_month = None
-        if (file_date := extract_date_from_filename(file_name)):
-            try:
-                # handle YYYYMMDD or YYYY-MM-DD formats
-                if file_date.isdigit() and len(file_date) == 8:
-                    dt_obj = datetime.strptime(file_date, "%Y%m%d")
-                else:
-                    dt_obj = datetime.strptime(file_date, "%Y-%m-%d")
-                year_month = dt_obj.strftime("%Y-%m")
-            except Exception:
-                self.logger.error(f"Error parsing date from filename {file_name}: {file_date}", exc_info=True)
-                self.stats["errors"] += 1
-                return
+        # compute year_month from the filename
+        year_month = get_year_month_from_filename(file_name) if file_name else None
+        if file_name and year_month is None:
+            self.logger.error(
+                f"Error parsing date from filename {file_name}", exc_info=True
+            )
+            self.stats["errors"] += 1
+            return
         tuple_struct = {key: value for key, value in record.items()}
         tuple_struct["timestamp"] = ts
         record = {

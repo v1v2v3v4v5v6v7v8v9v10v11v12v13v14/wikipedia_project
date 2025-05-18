@@ -85,6 +85,21 @@ def extract_date_from_filename(filename: str) -> Optional[str]:
     
     return None
 
+
+def get_year_month_from_filename(filename: str) -> Optional[str]:
+    """Extract YYYY-MM from Wikimedia dump filenames."""
+    date_str = extract_date_from_filename(filename)
+    if not date_str:
+        return None
+    try:
+        if date_str.isdigit() and len(date_str) == 8:
+            dt_obj = datetime.strptime(date_str, "%Y%m%d")
+        else:
+            dt_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        return dt_obj.strftime("%Y-%m")
+    except Exception:
+        return date_str[:7] if len(date_str) >= 7 else None
+
 def convert_to_utc(dt: datetime) -> datetime:
     """Ensure datetime is timezone-aware and in UTC"""
     if dt.tzinfo is None:

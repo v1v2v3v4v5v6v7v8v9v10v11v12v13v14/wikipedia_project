@@ -10,7 +10,11 @@ from typing import Dict, Set, Optional, Any, Iterator, TextIO, BinaryIO, Union, 
 from icecream import ic
 from processing.shared.file_utils import get_text_stream
 from processing.parser.base_parser import BaseParser
-from wiki_utils.datetime_utils import extract_date_from_filename, normalize_timestamp_format
+from wiki_utils.datetime_utils import (
+    extract_date_from_filename,
+    normalize_timestamp_format,
+    get_year_month_from_filename,
+)
 from urllib.parse import urlparse
 from wiki_utils.hashing_utils import WikimediaIdentifiers
 from processing.shared.constants import (
@@ -153,18 +157,8 @@ class TSVParser(BaseParser):
                     self.logger.warning(f"Invalid timestamp format '{self.timestamp}': {str(e)}")
 
             # derive year_month from filename
-            year_month = None
-            if (file_date := extract_date_from_filename(filename)):
-                try:
-                    # handle YYYYMMDD or YYYY-MM-DD formats
-                    if file_date.isdigit() and len(file_date) == 8:
-                        dt_obj = datetime.strptime(file_date, "%Y%m%d")
-                    else:
-                        dt_obj = datetime.strptime(file_date, "%Y-%m-%d")
-                    year_month = dt_obj.strftime("%Y-%m")
-                except Exception:
-                    # fallback: take first 7 characters
-                    year_month = file_date[:7]
+            year_month = get_year_month_from_filename(filename)
+            file_date = extract_date_from_filename(filename)
 
             # derive date from filename
             record_date = None
