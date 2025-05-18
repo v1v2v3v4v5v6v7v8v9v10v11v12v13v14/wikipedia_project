@@ -1,7 +1,10 @@
+README.md
 setup.py
 avro_utils/__init__.py
 config/__init__.py
 config/settings.py
+dags/__init__.py
+dags/backfill_cassandra.py
 downloading/__init__.py
 downloading/wiki_downloader.py
 management/__init__.py
@@ -9,13 +12,13 @@ management/manager.py
 persistence/__init__.py
 persistence/constants.py
 persistence/mongo_service.py
-persistence/mongo_test.py
 processing/__init__.py
 processing/orchestrator.py
+processing/flink_processing/__init__.py
+processing/flink_processing/kafka_topic_union.py
 processing/parser/__init__.py
 processing/parser/base_parser.py
 processing/parser/maria_parser.py
-processing/parser/parser_test.py
 processing/parser/tsv_parser.py
 processing/parser/xml_parser.py
 processing/producer/__init__.py
@@ -24,6 +27,9 @@ processing/producer/kafka_python.py
 processing/shared/constants.py
 scripts/__init__.py
 scripts/cli_system.py
+tests/__init__.py
+tests/mongo_test.py
+tests/parser_test.py
 wiki_io/__init__.py
 wiki_io/file_discoverer.py
 wiki_io/path_utils.py
