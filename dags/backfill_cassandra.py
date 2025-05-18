@@ -5,7 +5,6 @@ import logging
 import pytest
 from pathlib import Path
 from pymongo.errors import PyMongoError
-from icecream import ic
 from logging.handlers import RotatingFileHandler
 from datetime import datetime, date
 from typing import List, Dict, Any, Optional, Union
@@ -13,7 +12,6 @@ from tests.parser_test import SchemaTester
 from persistence.mongo_service import MongoPersistenceService
 from processing.parser.maria_parser import PageLinksParser
 import sys
-from icecream import ic
 from tests.parser_test import ParserTestConfig
 from processing.parser.base_parser import BaseParser
 from processing.parser.xml_parser import RevisionParser
@@ -46,7 +44,8 @@ def load_test_data(test_name:str, test_config: Dict, sample_limit = 7):
     # Directly use the provided test_config mapping
     
     sample_path, parser_factory, topic = test_config[test_name]
-    wiki_code, timestamp = ic(ParserTestConfig.extract_wiki_metadata(sample_path))
+    wiki_code, timestamp = ParserTestConfig.extract_wiki_metadata(sample_path)
+    logging.debug((wiki_code, timestamp))
     # Instantiate parser
     parser = parser_factory(wiki_code, timestamp)
     # Ensure parser uses the correct wiki code

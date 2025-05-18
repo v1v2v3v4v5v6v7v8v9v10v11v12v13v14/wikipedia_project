@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from processing.shared.file_utils import get_text_stream
 from typing import Iterator, TextIO, Dict, Any, Optional, Union, List, Set, BinaryIO
 import logging
-from icecream import ic
 
 from processing.shared.file_utils import get_binary_stream, get_text_stream, safe_close, is_binary_stream
 import bz2
@@ -122,8 +121,9 @@ class SQLDumpParser(BaseParser, ABC):
                 if m and m.group("table") == self.target_table():
                     values_text = m.group("values")
                     for tup in self._split_tuples(values_text):
-                        for rec in self._process_tuple(tup,file_name):
-                            yield ic(rec)
+                        for rec in self._process_tuple(tup, file_name):
+                            logging.debug(rec)
+                            yield rec
                             count += 1
                             if sample_limit and count >= sample_limit:
                                 return

@@ -9,7 +9,6 @@ from typing import Dict, Any, Iterator, Optional, TextIO, Tuple, Callable, Type,
 import re
 from fastavro import parse_schema, validate, schemaless_writer
 from fastavro._validation import ValidationError
-from icecream import ic
 
 from processing.parser.base_parser import SQLDumpParser
 from datetime import datetime, timezone
@@ -103,9 +102,12 @@ class GenericSQLParser(SQLDumpParser):
         self.stats["processed"] += 1
 
         if self.schema.post_process:
-            yield from ic(self.schema.post_process(record))
+            for rec in self.schema.post_process(record):
+                logging.debug(rec)
+                yield rec
         else:
-            yield ic(record)
+            logging.debug(record)
+            yield record
 
 # --- Define pagelinks schema and parser ---
 def _pagelinks_post(base: Dict[str, Any]) -> Iterator[Dict[str, Any]]:

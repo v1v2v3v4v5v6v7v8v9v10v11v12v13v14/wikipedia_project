@@ -7,7 +7,6 @@ import requests
 from pathlib import Path
 import logging
 import json
-from icecream import ic
 
 # Import WikimediaDownloader components
 from downloading.wiki_downloader import WikimediaDownloader
@@ -182,7 +181,8 @@ class CLISystem:
             parser_map = {}
             for req in requests:
                 data_type = req.get("data_type")
-                wiki_codes = ic(req.get("wiki_codes")) or []
+                wiki_codes = req.get("wiki_codes") or []
+                logging.debug(wiki_codes)
                 # If no wiki_codes specified, use None as key
                 if not wiki_codes:
                     if data_type in ["pageviews", "clickstream"]:
@@ -292,7 +292,7 @@ class CLISystem:
             # Select parser based on data_type explicitly
             parser = parser_map.get((data_type, wiki_code))
             if not parser:
-                ic(parser_map, data_type)
+                logging.debug({"parser_map": parser_map, "data_type": data_type})
                 self.logger.error(f"No parser available for data type: {data_type}")
                 continue
 
@@ -311,7 +311,8 @@ class CLISystem:
                 for file_path in download_path.rglob('*'):
                     if file_path.is_file():
                         with file_path.open('rb') as stream:
-                            for record in ic(parser.parse_stream(stream, file_path.name, wiki_filter=wiki_code)):
+                            for record in parser.parse_stream(stream, file_path.name, wiki_filter=wiki_code):
+                                logging.debug(record)
                                 # Add filtering logic here if needed
 
                                 # --- MongoDB Persistence Integration ---

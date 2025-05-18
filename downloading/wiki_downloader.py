@@ -12,8 +12,6 @@ import requests
 from tqdm import tqdm
 import logging
 import re
-from icecream import ic
-ic.enable()
 import gzip
 import bz2
 import shutil
@@ -36,7 +34,8 @@ class WikimediaDownloader:
     }
     
     def __init__(self, output_dir: Path, logger: Optional[logging.Logger] = None):
-        self.output_dir = ic(Path(output_dir))
+        self.output_dir = Path(output_dir)
+        logging.debug(self.output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         self.logger = logger or logging.getLogger(__name__)
@@ -118,34 +117,37 @@ class WikimediaDownloader:
         for year in years:
             for month in months:
                 year_str = str(year)
-                month_str = ic(f"{month:02d}")
-                year_month = ic(f"{year_str}-{month_str}")
+                month_str = f"{month:02d}"
+                year_month = f"{year_str}-{month_str}"
+                logging.debug(year_month)
                 
                 # Build URL
                 if data_type == "pageviews":
-                    url = ic(f"{self.BASE_URLS[data_type]}{year_str}/{year_month}/")
+                    url = f"{self.BASE_URLS[data_type]}{year_str}/{year_month}/"
                 elif data_type == "clickstream":
-                    url = ic(f"{self.BASE_URLS[data_type]}{year_month}/")
+                    url = f"{self.BASE_URLS[data_type]}{year_month}/"
                 else:
                     raise ValueError(f"Unknown time-based data type: {data_type}")
                 
                 # Get file list
                 try:
-                    response = ic(self.session.get(url, timeout=10))
+                    response = self.session.get(url, timeout=10)
+                    logging.debug(response)
                     response.raise_for_status()
                     # Updated regex pattern for pageviews to match .gz and .bz2 files
                     files = []
                     if data_type == "pageviews":
                         pattern = f'href="({data_type}-.*?\\.(?:gz|bz2))"'
                         files = re.findall(pattern, response.text)
-                        ic(files, 'found files')
+                        logging.debug(files)
                     elif wiki_codes and data_type == "clickstream":
                         for code in wiki_codes:
-                            files.extend(ic(re.findall(f'href="({data_type}-.*?{code}.*?\\.gz)"', response.text)))
+                            files.extend(re.findall(f'href="({data_type}-.*?{code}.*?\\.gz)"', response.text))
                     
                     for filename in files:
                         stats["attempted"] += 1
-                        if ic(self._process_file(data_type, url, filename, year_month, wiki_codes=wiki_codes), 'weird function call'):
+                        if self._process_file(data_type, url, filename, year_month, wiki_codes=wiki_codes):
+                            logging.debug(f"Processed {filename}")
                             stats["success"] += 1
                 
                 except requests.RequestException as e:
@@ -197,7 +199,8 @@ class WikimediaDownloader:
         
         for wiki_code in wiki_codes:
             # Get available dumps
-            url = ic(self.BASE_URLS[data_type].format(wiki_code=wiki_code))
+            url = self.BASE_URLS[data_type].format(wiki_code=wiki_code)
+            logging.debug(url)
             try:
                 response = self.session.get(url, timeout=10)
                 response.raise_for_status()
@@ -211,7 +214,8 @@ class WikimediaDownloader:
                     continue
                     
                 # Get files for the latest dump
-                dump_url = ic(f"{url}{latest_dump}")
+                dump_url = f"{url}{latest_dump}"
+                logging.debug(dump_url)
                 response = self.session.get(dump_url, timeout=10)
                 response.raise_for_status()
                 
@@ -219,7 +223,7 @@ class WikimediaDownloader:
                 files = []
                 if data_type == "revisions":
                     files = re.findall(r'href="/(?:[^"]+/)*([^"/]+?-stub-meta-history\.xml\.gz)"', response.text)
-                    ic(files)
+                    logging.debug(files)
                 elif data_type == "pagelinks":
                     files = re.findall(r'href="(.*?-pagelinks\.sql\.gz)"', response.text)
                 
@@ -227,9 +231,9 @@ class WikimediaDownloader:
                     stats["attempted"] += 1
                     # For revisions, filename may have leading path, so build full URL and output path
                     if data_type == "revisions":
-                        ic(url, filename)
-                        file_url = ic(f"{dump_url}/{filename}")
-                        output_path = ic(self.output_dir / data_type / wiki_code / latest_dump / Path(filename).name)
+                        logging.debug(f"{url} {filename}")
+                        file_url = f"{dump_url}/{filename}"
+                        output_path = self.output_dir / data_type / wiki_code / latest_dump / Path(filename).name
                         os.makedirs(output_path.parent, exist_ok=True)
                         if self.download_file(file_url, output_path):
                             stats["success"] += 1
@@ -298,7 +302,8 @@ class WikimediaDownloader:
         parts.append(filename)
         # Compose path
         path = Path(*parts)
-        return ic(path)
+        logging.debug(path)
+        return path
 
     def download_file(
         self,

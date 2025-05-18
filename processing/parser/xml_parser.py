@@ -4,11 +4,9 @@ import hashlib
 import re
 from typing import Iterator, Optional, Dict, Any, TextIO, List, Union
 from lxml import etree
-from icecream import ic
 
 from processing.parser.base_parser import BaseParser
 from wiki_utils.datetime_utils import parse_wikimedia_timestamp
-ic.enable()
 
 WIKI_NS = {'mw': 'http://www.mediawiki.org/xml/export-0.11/'}
 
@@ -121,14 +119,16 @@ class RevisionParser(BaseParser):
             ns = int(page_elem.findtext('./mw:ns', default='0', namespaces=WIKI_NS))
             is_redirect = page_elem.find('./mw:redirect', namespaces=WIKI_NS) is not None
             
-            return ic({
+            result = {
                 'page_id': page_id,
                 'title': title,
                 'namespace': ns,
                 'is_redirect': is_redirect,
                 'hash_id': hashlib.sha256(f"{self.wiki_code}-{page_id}".encode()).hexdigest(),
                 'should_skip': ns != 0
-            })
+            }
+            logging.debug(result)
+            return result
         except (ValueError, TypeError) as e:
             self.logger.warning(f"Invalid page data: {e}")
             self.stats['errors'] += 1
@@ -145,7 +145,7 @@ class RevisionParser(BaseParser):
                 rev_ts = revision_data.get('timestamp', 0)
                 year_month = datetime.fromtimestamp(rev_ts, timezone.utc).strftime("%Y-%m") if rev_ts else ''
                 wiki_code = page_data['wiki_code']
-                yield ic({
+                record = {
                     "page_hash": page_hash,
                     "year_month": year_month,
                     "wiki_code": wiki_code,
@@ -156,7 +156,9 @@ class RevisionParser(BaseParser):
                         "timestamp": datetime.fromtimestamp(revision_data.get('timestamp', 0), timezone.utc).isoformat(),
                         "contributor_id": str(revision_data.get('contributor_id', ''))
                     }
-                })
+                }
+                logging.debug(record)
+                yield record
                 self.stats['revisions'] += 1
             else:
                 self.stats['skipped_revisions'] += 1
@@ -184,12 +186,14 @@ class RevisionParser(BaseParser):
                 
             contributor_data = self._extract_contributor(rev_elem)
             
-            return ic({
+            result = {
                 'rev_id': rev_elem.findtext('./mw:id', namespaces=WIKI_NS) or "",
                 # convert parsed datetime to epoch seconds (Avro int)
                 'timestamp': int(timestamp.timestamp()),
                 'contributor_id': contributor_data.get('id') or None
-            })
+            }
+            logging.debug(result)
+            return result
         except (ValueError, TypeError) as e:
             self.logger.warning(f"Invalid revision data: {e}")
             return None
@@ -203,11 +207,13 @@ class RevisionParser(BaseParser):
         id_text = contrib.findtext('./mw:id', namespaces=WIKI_NS)
         username_text = contrib.findtext('./mw:username', namespaces=WIKI_NS)
         ip_text = contrib.findtext('./mw:ip', namespaces=WIKI_NS)
-        return ic({
+        result = {
             'id': int(id_text) if id_text else 0,
             'username': username_text or "",
             'ip': ip_text or ""
-        })
+        }
+        logging.debug(result)
+        return result
     
     @property
     def last_updated(self) -> Optional[datetime]:

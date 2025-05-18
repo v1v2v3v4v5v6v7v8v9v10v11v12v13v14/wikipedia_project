@@ -7,7 +7,6 @@ import io
 from collections import defaultdict, Counter, namedtuple
 from datetime import datetime, timezone
 from typing import Dict, Set, Optional, Any, Iterator, TextIO, BinaryIO, Union, List
-from icecream import ic
 from processing.shared.file_utils import get_text_stream
 from processing.parser.base_parser import BaseParser
 from wiki_utils.datetime_utils import extract_date_from_filename, normalize_timestamp_format
@@ -287,7 +286,8 @@ class TSVParser(BaseParser):
         date_str = None
         if timestamp_ms is not None:
             dt_date = datetime.fromtimestamp(timestamp_ms / 1000, tz=timezone.utc)
-            date_str = ic(dt_date.strftime("%Y-%m-%d"))
+            date_str = dt_date.strftime("%Y-%m-%d")
+            logging.debug(date_str)
 
         # Extract and set year_month field
         year_month = None
