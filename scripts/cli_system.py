@@ -416,5 +416,5 @@ if __name__ == "__main__":
         cli = CLISystem()
         cli.run()
     except KeyboardInterrupt:
-        print("\nOperation cancelled by user")
+        logging.getLogger("CLISystem").info("\nOperation cancelled by user")
         sys.exit(1)
